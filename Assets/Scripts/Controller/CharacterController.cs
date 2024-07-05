@@ -1,18 +1,56 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
-public class CharacterController : MonoBehaviour
+namespace Controller
 {
-    // Start is called before the first frame update
-    void Start()
+    public class CharacterController : MonoBehaviour
     {
-        
-    }
+        public Inputs input;
+        public Settings setting;
 
-    // Update is called once per frame
-    void Update()
-    {
+        private Rigidbody2D _rb;
+        private CharacterInput _inputClass;
+
+        [Serializable]
+        public struct Inputs
+        {
+            public Vector2 movement;
+        }
         
+        [Serializable]
+        public struct Settings
+        {
+            public float walkVelocity;
+        }
+        
+        private void Awake()
+        {
+            _inputClass = new CharacterInput();
+        }
+
+        private void Start()
+        {
+            _rb = GetComponent<Rigidbody2D>();
+        }
+
+        private void OnEnable()
+        {
+            _inputClass.Enable();
+        }
+
+        private void Update()
+        {
+            InputUpdate();
+        }
+
+        private void FixedUpdate()
+        {
+            _rb.AddForce(input.movement * setting.walkVelocity);
+        }
+
+        private void InputUpdate()
+        {
+            input.movement = _inputClass.Player.movement.ReadValue<Vector2>();
+        }
     }
 }
