@@ -10,6 +10,26 @@ public class MonsterController : MonoBehaviour
 
     public Transform player;
 
+    public float chasingDistance;
+    public Setting setting;
+    public State state;
+
+    [Serializable]
+    public enum State
+    {
+        Idle,
+        Chasing
+    }
+
+    [Serializable]
+    public struct Setting
+    {
+        public float chasingMaxSpeed;
+        public float chasingSpeed;
+        public float chasingDetectRange;
+        public float chasingEndDistance;
+    }
+    
     private void Start()
     {
         _agent = GetComponent<NavMeshAgent>();
@@ -21,9 +41,43 @@ public class MonsterController : MonoBehaviour
 
     private void Update()
     {
-        if (_agent.remainingDistance > 0.5f)
+        StateUpdate();
+    }
+
+    private float _currentSpeed;
+    private float _refCurrentSpeed;
+    
+    private void StateUpdate()
+    {
+        switch (state)
         {
-            _agent.SetDestination(player.position);
+            case State.Idle:
+
+                _agent.speed = Mathf.Lerp(_agent.speed, 0f, 0.1f);
+
+                if (Vector3.Distance(transform.position, player.position) < setting.chasingDetectRange
+                    )
+                {
+                    _agent.speed = setting.chasingMaxSpeed;
+                    state = State.Chasing;
+                }
+
+                break;
+            case State.Chasing:
+
+                _agent.SetDestination(player.position);
+                _agent.speed = Mathf.SmoothDamp(_agent.speed, setting.chasingSpeed, ref _refCurrentSpeed, 2f);
+                
+
+                if (Vector3.Distance(transform.position, player.position) > setting.chasingEndDistance)
+                {
+                    state = State.Idle;
+                }
+                
+
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 }
